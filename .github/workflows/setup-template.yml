@@ -1,0 +1,55 @@
+name: Setup Project Template
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  setup-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Get Repository Name
+        run: echo "REPO_NAME=${{ github.repository }}" | sed 's/.*\///' >> $GITHUB_ENV
+
+      - name: Replace Template Name in Files
+        run: |
+          find . -type f -exec sed -i "s/template_connector/${REPO_NAME}/g" {} +
+
+      - name: Update pom.xml
+        run: |
+          sed -i "s/<artifactId>template_connector<\/artifactId>/<artifactId>${REPO_NAME}<\/artifactId>/g" pom.xml
+
+      - name: Rename Java Package Directories
+        run: |
+          OLD_PACKAGE="com/example/template_connector"
+          NEW_PACKAGE="com/example/${REPO_NAME}"
+          if [ -d "src/main/java/$OLD_PACKAGE" ]; then
+            mkdir -p "src/main/java/$NEW_PACKAGE"
+            mv src/main/java/$OLD_PACKAGE/* src/main/java/$NEW_PACKAGE/
+            rm -rf src/main/java/$OLD_PACKAGE
+          fi
+
+      - name: Update Java Package Names in Files
+        run: |
+          OLD_PACKAGE="com.example.template_connector"
+          NEW_PACKAGE="com.example.${REPO_NAME}"
+          find src/ -type f -name "*.java" -exec sed -i "s/$OLD_PACKAGE/$NEW_PACKAGE/g" {} +
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .
+          git commit -m "Customized project with repository name: $REPO_NAME" || echo "No changes to commit"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Tests
+        run: mvn test
