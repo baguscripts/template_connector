@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   setup-template:
@@ -31,7 +31,7 @@ jobs:
           OLD_PACKAGE_DIR="src/main/java/com/example/template_connector"
           NEW_PACKAGE_DIR="src/main/java/com/example/${REPO_NAME}"
 
-          if [ -d "$OLD_PACKAGE_DIR" ]; then
+          if [ "$REPO_NAME" != "template_connector" ] && [ -d "$OLD_PACKAGE_DIR" ]; then
             mkdir -p "$NEW_PACKAGE_DIR"
             mv "$OLD_PACKAGE_DIR"/* "$NEW_PACKAGE_DIR/"
             rm -rf "$OLD_PACKAGE_DIR"
