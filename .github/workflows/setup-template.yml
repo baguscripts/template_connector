@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get Repository Name
-        run: echo "REPO_NAME=${{ github.repository }}" | sed 's/.*\///' >> $GITHUB_ENV
+        run: echo "REPO_NAME=$(basename ${{ github.repository }})" >> $GITHUB_ENV
 
       - name: Replace Template Name in Files
         run: |
@@ -24,15 +24,17 @@ jobs:
       - name: Update pom.xml
         run: |
           sed -i "s/<artifactId>template_connector<\/artifactId>/<artifactId>${REPO_NAME}<\/artifactId>/g" pom.xml
+          sed -i "s/<name>template_connector<\/name>/<name>${REPO_NAME}<\/name>/g" pom.xml
 
       - name: Rename Java Package Directories
         run: |
-          OLD_PACKAGE="com/example/template_connector"
-          NEW_PACKAGE="com/example/${REPO_NAME}"
-          if [ -d "src/main/java/$OLD_PACKAGE" ]; then
-            mkdir -p "src/main/java/$NEW_PACKAGE"
-            mv src/main/java/$OLD_PACKAGE/* src/main/java/$NEW_PACKAGE/
-            rm -rf src/main/java/$OLD_PACKAGE
+          OLD_PACKAGE_DIR="src/main/java/com/example/template_connector"
+          NEW_PACKAGE_DIR="src/main/java/com/example/${REPO_NAME}"
+
+          if [ -d "$OLD_PACKAGE_DIR" ]; then
+            mkdir -p "$NEW_PACKAGE_DIR"
+            mv "$OLD_PACKAGE_DIR"/* "$NEW_PACKAGE_DIR/"
+            rm -rf "$OLD_PACKAGE_DIR"
           fi
 
       - name: Update Java Package Names in Files
