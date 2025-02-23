@@ -44,14 +44,15 @@ jobs:
           find src/ -type f -name "*.java" -exec sed -i "s/$OLD_PACKAGE/$NEW_PACKAGE/g" {} +
 
       - name: Commit and Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add .
           git commit -m "Customized project with repository name: $REPO_NAME" || echo "No changes to commit"
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git pull --rebase
+          git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git HEAD:main
 
       - name: Run Tests
         run: mvn test
