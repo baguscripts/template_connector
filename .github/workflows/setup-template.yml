@@ -17,17 +17,21 @@ jobs:
       - name: Get Repository Name
         run: echo "REPO_NAME=$(basename ${{ github.repository }})" >> $GITHUB_ENV
 
-      - name: Update `pom.xml` with New Project Name
+      - name: Replace Template Name in Files
         run: |
-          sed -i "s|<artifactId>template_connector</artifactId>|<artifactId>${REPO_NAME}</artifactId>|g" pom.xml
-          sed -i "s|<name>template_connector</name>|<name>${REPO_NAME}</name>|g" pom.xml
+          find . -type f -exec sed -i "s/template_connector/${REPO_NAME}/g" {} +
+
+      - name: Update pom.xml
+        run: |
+          sed -i "s/<artifactId>template_connector<\/artifactId>/<artifactId>${REPO_NAME}<\/artifactId>/g" pom.xml
+          sed -i "s/<name>template_connector<\/name>/<name>${REPO_NAME}<\/name>/g" pom.xml
 
       - name: Rename Java Package Directories
         run: |
           OLD_PACKAGE_DIR="src/main/java/com/example/template_connector"
           NEW_PACKAGE_DIR="src/main/java/com/example/${REPO_NAME}"
 
-          if [ -d "$OLD_PACKAGE_DIR" ]; then
+          if [ "$REPO_NAME" != "template_connector" ] && [ -d "$OLD_PACKAGE_DIR" ]; then
             mkdir -p "$NEW_PACKAGE_DIR"
             mv "$OLD_PACKAGE_DIR"/* "$NEW_PACKAGE_DIR/"
             rm -rf "$OLD_PACKAGE_DIR"
@@ -35,7 +39,9 @@ jobs:
 
       - name: Update Java Package Names in Files
         run: |
-          find src/ -type f -name "*.java" -exec sed -i "s/com.example.template_connector/com.example.${REPO_NAME}/g" {} +
+          OLD_PACKAGE="com.example.template_connector"
+          NEW_PACKAGE="com.example.${REPO_NAME}"
+          find src/ -type f -name "*.java" -exec sed -i "s/$OLD_PACKAGE/$NEW_PACKAGE/g" {} +
 
       - name: Commit and Push Changes
         env:
