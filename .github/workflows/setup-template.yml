@@ -45,7 +45,7 @@ jobs:
 
       - name: Commit and Push Changes
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.Gh_sec }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
